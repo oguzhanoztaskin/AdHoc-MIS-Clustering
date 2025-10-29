@@ -1,4 +1,6 @@
 \documentclass{winslabreport}
+\usepackage{lmodern}
+
 \reporttitle{Style Guide for Writing Technical Reports}
 \coursename{CENG513 Wireless Communications and Networking}
 \courseterm{2016-2017 Spring}
@@ -44,31 +46,50 @@ The Abstract is ONLY text. Use the active voice when possible, but much of it ma
 
 \section{Introduction}
 
-If you would like to get a good grade for your project, you have to write a good report.  Your project will be assessed mostly based on the report. Examiners are not mind-readers, and cannot give credit for work which you have done but not included in the report~\cite{York2017}.
+Mobile Ad Hoc Networks (MANETs) are self-organizing systems of mobile nodes that operate without any fixed infrastructure. This inherent flexibility is their greatest strength but also their primary challenge. The constantly changing network topology makes traditional routing protocols, which assume stable links, inefficient and unable to scale. In large, dynamic MANETs, the control message overhead required to maintain routing information can overwhelm the network, a phenomenon often called a "broadcast storm." The fundamental problem, therefore, is to impose a logical structure on this physical chaos. Clustering is the most prominent technique for achieving this, partitioning the network into manageable groups, or clusters. Each cluster is coordinated by a cluster head (CH), and these CHs collectively form a virtual backbone for more efficient inter-cluster communication.
 
-Here is the Stanford InfoLab's patented five-point structure for Introductions. Unless there's a good argument against it, the Introduction should consist of five paragraphs answering the following five questions:
-\begin{enumerate}
-\item What is the problem?
-\item Why is it interesting and important? What do you gain when you solve the problem, and what do you miss if you do not solve it?
-\item Why is it hard? (e.g., why do naive approaches fail?)
-\item Why hasn't it been solved before? What's wrong with previous proposed solutions? How does yours differ?
-\item What are the key components of your approach and results including any specific limitations.
-\end{enumerate}
+A powerful and theoretically sound approach to selecting these cluster heads is to compute a Maximal Independent Set (MIS) of the network graph. An MIS is a set of nodes where no two are direct neighbors, and which cannot be expanded further. This structure guarantees that every node in the network is either a CH or is adjacent to one, forming a dominating set that effectively covers the entire network. While elegant in theory, the practical implementation is difficult. Naive algorithms for maintaining an MIS in a dynamic environment often suffer from a critical flaw: instability. A single node changing its status can trigger a cascade of changes throughout the network, an issue known as the "ripple effect of re-clustering." The network can end up spending more resources on maintaining the cluster structure than on transmitting data. This paper proposes a modified MIS-based clustering algorithm with a primary focus on stability, introducing localized and event-driven maintenance rules designed to suppress this ripple effect and create a more robust network hierarchy.
 
-Then have a final paragraph or subsection: ``Summary of Contributions". It should list the major contributions in bullet form, mentioning in which sections they can be found. This material doubles as an outline of the rest of the paper, saving space and eliminating redundancy.
+% If you would like to get a good grade for your project, you have to write a good report.  Your project will be assessed mostly based on the report. Examiners are not mind-readers, and cannot give credit for work which you have done but not included in the report~\cite{York2017}.
+
+% Here is the Stanford InfoLab's patented five-point structure for Introductions. Unless there's a good argument against it, the Introduction should consist of five paragraphs answering the following five questions:
+% \begin{enumerate}
+% \item What is the problem?
+% \item Why is it interesting and important? What do you gain when you solve the problem, and what do you miss if you do not solve it?
+% \item Why is it hard? (e.g., why do naive approaches fail?)
+% \item Why hasn't it been solved before? What's wrong with previous proposed solutions? How does yours differ?
+% \item What are the key components of your approach and results including any specific limitations.
+% \end{enumerate}
+
+% Then have a final paragraph or subsection: ``Summary of Contributions". It should list the major contributions in bullet form, mentioning in which sections they can be found. This material doubles as an outline of the rest of the paper, saving space and eliminating redundancy.
+
+% %%%
+
+% According to \cite{algorithmic2009}, algorithmic complexity of clustering is NP-Complete for simple undirected graphs, and research on MANETs may use unit disks to represent its topology.
+
+% A successful approach to alleviate the burden of maintenance in large MANETs is to decompose the network into clusters and then work on the maintenance of the clusters instead of each and every node directly \cite{algorithmic2009}.
+
 
 
 \section{Background and Related Work}
 
 \subsection{Background}
 
-This section (1 page at most for background) provides the background information needed for the rest of your report to be understood. 
+% This section (1 page at most for background) provides the background information needed for the rest of your report to be understood. 
+The core of our work lies at the intersection of graph theory and wireless networking. A MANET can be modeled as an undirected graph $G = (V, E)$, where $V$ is the set of mobile nodes and $E$ is the set of communication links between them. A key structure for creating a network backbone is a Dominating Set (DS), which is a subset of vertices $D \subseteq V$ such that every vertex not in $D$ is adjacent to at least one vertex in $D$. This ensures full network coverage. A Maximal Independent Set (MIS) is a specific and highly useful type of dominating set. A set $I \subseteq V$ is an independent set if no two vertices in I are adjacent. It is a maximal independent set if it is an independent set that is not a proper subset of any other independent set. Every MIS is, by definition, also a dominating set. This property makes it an ideal candidate for clustering, as the selected CHs (the nodes in the MIS) are guaranteed to cover the network while also being spatially separated, which is beneficial for reducing interference and reusing wireless channel resources.
 
 \subsection{Related Work}
 
-The perennial question: Should related work be covered near the beginning of the paper or near the end?
-\textbf{Beginning}: if it can be short yet detailed enough, or if it's critical to take a strong defensive stance about previous work right away. In this case Related Work can be either a subsection at the end of the Introduction, or its own Section 2~\cite{Widom2006}. \textbf{End}: if it can be summarized quickly early on (in the Introduction or Preliminaries), or if sufficient comparisons require the technical content of the paper. In this case Related Work should appear just before the Conclusions, possibly in a more general section `Discussion and Related Work''~\cite{Widom2006}.
+The use of dominating sets for routing in MANETs is a well-established field. The work on constructing a Connected Dominating Set (CDS) is a foundational contribution in the field \cite{wuli2004maximal}. While effective, the maintenance of a CDS can incur significant overhead as the topology changes. Building on this, many algorithms have focused specifically on using an MIS for clustering. The greedy distributed algorithms that serve as a common baseline for MIS construction are detailed in \cite{algorithmic2009}, where nodes make local decisions based on neighbor information to join the set. These algorithms highlight the fundamental distributed logic required.
 
+The most critical challenge, however, is not the initial formation but the ongoing maintenance of the cluster structure. A comprehensive overview of clustering costs, which formally identifies the "ripple effect of re-clustering" as a primary source of inefficiency, is provided in a key survey of the field \cite{Yu1423333}. This analysis underscores that an algorithm's value is determined not just by the quality of its initial clusters, but by its ability to maintain them with minimal overhead. In response to this stability challenge, several mobility-aware schemes have been proposed. For example, some algorithms attempt to select CHs with the lowest relative mobility compared to their neighbors. While this can create very stable clusters, its effectiveness is largely limited to scenarios with predictable, group-based mobility, such as in vehicular ad hoc networks (VANETs) \cite{surveyonvehicular2020}. Other approaches tackle stability from a theoretical standpoint, proposing self-stabilizing algorithms that guarantee convergence to a valid clustered state from any arbitrary initial configuration \cite{Flauzac5279437}. Our work addresses the gap for a more general-purpose solution by retaining the simple and robust MIS framework but augmenting it with new, localized maintenance rules specifically designed to dampen the ripple effect in a wide range of mobility scenarios.
+
+% The perennial question: Should related work be covered near the beginning of the paper or near the end?
+% \textbf{Beginning}: if it can be short yet detailed enough, or if it's critical to take a strong defensive stance about previous work right away. In this case Related Work can be either a subsection at the end of the Introduction, or its own Section 2~\cite{Widom2006}. \textbf{End}: if it can be summarized quickly early on (in the Introduction or Preliminaries), or if sufficient comparisons require the technical content of the paper. In this case Related Work should appear just before the Conclusions, possibly in a more general section `Discussion and Related Work''~\cite{Widom2006}.
+
+% %%%
+
+% \cite{algorithmic2009} 
 
 \section{Main Contributions}
 
