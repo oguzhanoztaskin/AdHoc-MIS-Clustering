@@ -153,16 +153,46 @@ The most critical challenge, however, is not the initial formation but the ongoi
 
 \section{Main Contributions}
 
-You can introduce multiple sections for presenting your contribution. Provide content specific titles. 
+Our core contribution is the design and execution of a systematic simulation study to comparatively evaluate key distributed clustering protocols based on the Maximal Independent Set ($\text{MIS}$) formulation. This work includes the initial implementation of these protocols on \textbf{OMNeT++ (v6.2.0)} and \textbf{INET (v4.5.4)}.
 
-\subsection{Your Contribution 1}
+\subsection{Systematic Simulation Study Design and Methodology}
 
-Present your proposals, algorithms, techniques etc. here.
+We employed a \textbf{quantitative, comparative simulation methodology} to evaluate the performance trade-offs of three distinct distributed clustering algorithms: a classical randomized MIS protocol (based on \cite{Wattenhofer2016}), the improved $\text{MIS}$ proposal from \cite{ghaffari2016improved}, and the $\text{Min-IDS}$ heuristic from \cite{pan2023improved}.
 
-\subsection{Your Contribution 2}
+\begin{enumerate}
+    \item \textbf{Research Methodology:} The study uses a quantitative, comparative simulation approach to measure protocol performance across varied graph topologies.
+    
+    \item \textbf{Study Type:} This is an \textbf{original comparative study}. The algorithms are derived from literature, but their integration, implementation, and performance comparison within the \textbf{OMNeT++/INET} environment constitute the original investigation.
 
-Present your proposals, algorithms, techniques etc. here.
+    \item \textbf{Measurement Tools:} The simulation platform is \textbf{OMNeT++ (v6.2.0)} using the \textbf{INET Framework (v4.5.4)}. Custom application modules were developed to execute the distributed protocols and collect key performance metrics.
 
+    \item \textbf{Procedures Structure:} Procedures included: (1) C++ implementation of the three decentralized algorithms as INET application modules; (2) Configuration of diverse Random Geometric Graph ($\text{RGG}$) scenarios; (3) Repeated execution (30 runs per scenario) to ensure statistical validity.
+
+    \item \textbf{Pilot Study:} A pilot study was conducted to determine the minimum simulation time required for all protocols to achieve full network stabilization and to fine-tune message logging and statistical parameters.
+
+    \item \textbf{Variables:}
+    \begin{itemize}
+        \item \textbf{Independent Variables (Controlled):} The specific \textbf{MIS/IDS Algorithm} used, and the \textbf{Network Size ($\mathcal{N}$) / Density} (node count and communication range).
+        \item \textbf{Dependent Variables (Measured):} \textbf{Convergence Time} (time to finalization), \textbf{Communication Overhead} (total messages exchanged), and \textbf{MIS Size} (final cluster head count).
+    \end{itemize}
+
+    \item \textbf{Sampling/Topology:} Sampling was achieved by generating multiple instances of \textbf{Random Geometric Graphs ($\text{RGGs}$)} for each scenario, allowing results to be averaged over varied connectivity conditions typical of $\text{MANETs}$.
+\end{enumerate}
+
+\subsection{Implementation and Comparative Protocol Integration}
+
+The technical core of the contribution involves the implementation of the distributed logic within the $\text{OMNeT++}$ environment.
+
+\subsubsection{Framework Setup and Design}
+The protocols were integrated into the $\text{INET}$ framework as decentralized application layer modules running on each mobile node. This design mandates that nodes communicate solely via $\text{INET}$'s message passing, accurately modeling the distributed nature of the algorithms (e.g., local priority assignment, neighbor state exchange, and final decision broadcast).
+
+\subsubsection{Comparative Implementation Focus}
+We implemented three algorithms targeting distinct optimization objectives:
+\begin{itemize}
+    \item \textbf{Classical MIS (\cite{Wattenhofer2016}):} Implemented to establish a baseline for time/message complexity, often based on randomized or sequential decision rules.
+    \item \textbf{Improved MIS (\cite{ghaffari2016improved}):} Focused on optimizing $\mathcal{O}(\text{time})$ and message efficiency, crucial for dynamic $\text{MANETs}$.
+    \item \textbf{Min-IDS Heuristic (\cite{pan2023improved}):} Implemented to investigate the trade-off between minimizing the resulting \textit{cluster head count} ($\text{MIS}$ size) versus the required communication overhead for convergence.
+\end{itemize}
 
 \section{Results and Discussion}
 
