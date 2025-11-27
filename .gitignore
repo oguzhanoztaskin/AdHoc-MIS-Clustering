@@ -1,0 +1,79 @@
+# OMNeT++ specific files
+*.vec
+*.sca
+*.vci
+*.anf
+*.out
+*.pcap
+*.plog
+
+# Build outputs
+out/
+results/
+*.exe
+*.so
+*.dll
+*.dylib
+*.o
+*.obj
+*.a
+*.lib
+
+# Generated files
+*_m.cc
+*_m.h
+*.d
+.oppbuildspec
+Makefile.vc
+.makefrag
+
+# IDE files
+.project
+.cproject
+.settings/
+.qtenvrc
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*.backup
+
+# Results and output directories
+results*/
+output*/
+logs*/
+
+# Eclipse CDT files
+.autotools
+.cproject
+.project
+.pydevproject
+
+# Visual Studio Code
+.vscode/
+
+# Compiled simulation executable (if named after project)
+demo
+simulation
