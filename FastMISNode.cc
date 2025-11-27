@@ -1,4 +1,5 @@
 #include "FastMISNode.h"
+#include <iostream>
 
 Define_Module(FastMISNode);
 
@@ -8,6 +9,7 @@ void FastMISNode::initialize() {
     inMIS = false;
     terminated = false;
     myRandomValue = 0.0;
+    finalRandomValue = 0.0;
     totalPhases = 0;
     
     // Initialize timing parameters
@@ -106,6 +108,9 @@ void FastMISNode::sendRandomValue() {
 
 void FastMISNode::makeDecision() {
     if (terminated) return;
+    
+    // Store the random value from this deciding phase
+    finalRandomValue = myRandomValue;
     
     EV << "Node " << nodeId << " making decision in phase " << currentPhase << endl;
     EV << "My random value: " << myRandomValue << ", received " << neighborRandomValues.size() 
@@ -266,10 +271,17 @@ void FastMISNode::finish() {
     cancelAndDelete(randomValueTimeoutMsg);
     cancelAndDelete(decisionTimeoutMsg);
     
-    EV << "Node " << nodeId << " finished after " << totalPhases << " phases. "
-       << (inMIS ? "IN MIS" : "NOT in MIS") << endl;
+    // Print to both EV and cout to ensure visibility
+    std::string msg = "Node " + std::to_string(nodeId) + " finished after " + 
+                      std::to_string(totalPhases) + " phases. " +
+                      (inMIS ? "IN MIS" : "NOT in MIS") + 
+                      " (final random value: " + std::to_string(finalRandomValue) + ")";
+    
+    EV << msg << endl;
+    std::cout << "INFO: " << msg << std::endl;
     
     // Record statistics
     recordScalar("phases", totalPhases);
     recordScalar("inMIS", inMIS ? 1 : 0);
+    recordScalar("finalRandomValue", finalRandomValue);
 }

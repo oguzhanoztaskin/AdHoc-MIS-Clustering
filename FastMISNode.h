@@ -15,6 +15,7 @@ private:
     bool inMIS;
     bool terminated;
     double myRandomValue;
+    double finalRandomValue;  // Store the random value from the deciding phase
     
     // Tracking neighbors and their random values
     std::set<int> activeNeighbors;
