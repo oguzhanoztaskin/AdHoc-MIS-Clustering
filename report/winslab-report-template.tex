@@ -76,7 +76,67 @@ A powerful and theoretically sound approach to selecting these cluster heads is 
 \subsection{Background}
 
 % This section (1 page at most for background) provides the background information needed for the rest of your report to be understood. 
-The core of our work lies at the intersection of graph theory and wireless networking. A MANET can be modeled as an undirected graph $G = (V, E)$, where $V$ is the set of mobile nodes and $E$ is the set of communication links between them. A key structure for creating a network backbone is a Dominating Set (DS), which is a subset of vertices $D \subseteq V$ such that every vertex not in $D$ is adjacent to at least one vertex in $D$. This ensures full network coverage. A Maximal Independent Set (MIS) is a specific and highly useful type of dominating set. A set $I \subseteq V$ is an independent set if no two vertices in I are adjacent. It is a maximal independent set if it is an independent set that is not a proper subset of any other independent set. Every MIS is, by definition, also a dominating set. This property makes it an ideal candidate for clustering, as the selected CHs (the nodes in the MIS) are guaranteed to cover the network while also being spatially separated, which is beneficial for reducing interference and reusing wireless channel resources.
+The core of our work lies at the intersection of graph theory and wireless networking. A Mobile Ad Hoc Network (\textbf{MANET}) can be modeled as an undirected graph $G = (V, E)$, where $V$ is the set of mobile nodes and $E$ is the set of communication links between them. Establishing a stable and efficient network \textbf{backbone} is crucial for scalability.
+
+\subsection{Dominating and Independent Sets}
+
+To achieve network coverage, we first introduce the concept of a \textbf{Dominating Set (DS)}.
+
+\begin{itemize}
+    \item \textbf{Dominating Set (DS)}: A subset of vertices $D \subseteq V$ such that every vertex not in $D$ is adjacent to at least one vertex in $D$. This ensures full network coverage, as every node is either in the backbone or directly connected to it.
+    \item The optimization goal is often to find a \textbf{Minimum Dominating Set (Min-DS)}, the smallest possible DS, a problem that is $\text{NP}$-hard.
+\end{itemize}
+
+In contrast, an \textbf{Independent Set (IS)} focuses on separation:
+
+\begin{itemize}
+    \item \textbf{Independent Set (IS)}: A subset of vertices $I \subseteq V$ such that \textbf{no two vertices} in $I$ are adjacent \cite{Wattenhofer2016}.
+\end{itemize}
+
+\subsection{Maximal Independent Sets (MIS) and Dominating Independent Sets}
+
+A key structure for clustering is one that satisfies \emph{both} properties simultaneously.
+
+\begin{itemize}
+    \item \textbf{Maximal Independent Set (MIS)}: An Independent Set $I$ that cannot be extended; it is not a proper subset of any other Independent Set \cite{Wattenhofer2016}.
+    \item A \textbf{Maximal Independent Set} is, by definition, also a \textbf{Dominating Set}.
+    \item Therefore, the set of all \textbf{MISs} is identical to the set of all \textbf{Independent Dominating Sets (IDSs)}.
+\end{itemize}
+
+This property makes the MIS an ideal candidate for selecting Cluster Heads (\textbf{CHs}) because the nodes in the MIS are guaranteed to:
+\begin{enumerate}
+    \item \textbf{Cover the network} (Dominating property).
+    \item \textbf{Be spatially separated} (Independent property), which is beneficial for reducing interference and reusing wireless channel resources.
+\end{enumerate}
+
+\subsection{Maximum vs. Minimum Cardinality Sets}
+
+While an MIS is a structural property, we often seek to optimize its size, which introduces the maximum and minimum cardinality problems. Let $i(G)$ be the minimum size of an MIS and $\alpha(G)$ be the maximum size of an IS.
+
+\begin{table}[h]
+    \centering
+    \caption{Cardinality Properties of Independent and Dominating Sets}
+    \label{tab:cardinality}
+    \begin{tabular}{|p{2cm}|p{6cm}|p{5.5cm}|}
+        \hline
+        \textbf{Concept} & \textbf{Property / Defining Set} & \textbf{Optimization/Complexity} \\
+        \hline
+        \textbf{MaxIS} & An \textbf{Independent Set (IS)} with the \textbf{largest possible cardinality}, $\alpha(G)$. & \textbf{Goal:} Maximize the size of the IS. \newline \textbf{Complexity:} $\text{NP}$-hard \cite{Wattenhofer2016} \\
+        \hline
+        \textbf{Min-IDS} & An \textbf{MIS/IDS} with the \textbf{smallest possible cardinality}, $i(G)$. & \textbf{Goal:} Minimize the backbone size. \newline \textbf{Complexity:} $\text{NP}$-hard \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Here, \textbf{MaxIS} stands for \textit{Maximum Independent Set} and \textbf{Min-IDS} stands for \textit{Minimum Independent Dominating Set}.
+
+The relationship between these concepts is hierarchical:
+\begin{itemize}
+    \item The set of all $\mathbf{MaxISs}$ is a subset ($\subseteq$) of the set of all \textbf{Independent Sets} ($\mathbf{ISs}$), as a MaxIS is simply one of the ISs that achieves the maximum size $\alpha(G)$.
+    \item The set of all $\mathbf{Min-IDSs}$ is a subset ($\subseteq$) of the set of all \textbf{MISs} (or $\mathbf{IDSs}$), as a Min-IDS is simply one of the MISs that achieves the minimum size $i(G)$.
+\end{itemize}
+
+Our work leverages the properties of the \textbf{MIS} to create a clustered backbone, focusing on efficient and distributed construction strategies for these complex, yet powerful, network structures.
 
 \subsection{Related Work}
 
