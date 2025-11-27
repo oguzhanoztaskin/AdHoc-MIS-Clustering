@@ -29,6 +29,20 @@ simple FastMISNode
         output out[]; // Variable number of outputs
 }
 
+// Slow MIS node for general graph topologies
+simple SlowMISNode
+{
+    parameters:
+        int nodeId = default(index);
+        double checkInterval = default(1.0);        // Time between decision checks
+        double discoveryTimeout = default(0.5);     // Time for neighbor discovery phase
+        @class(SlowMISNode);
+        @display("i=device/laptop;is=s");
+    gates:
+        input in[];   // Variable number of inputs
+        output out[]; // Variable number of outputs
+}
+
 // Ring topology network
 network RingNetwork
 {
@@ -62,15 +76,15 @@ network FastMISNetwork
         node[numNodes]: FastMISNode {
             parameters:
                 nodeId = index;
-                @display("p=300+200*cos(2*3.14159*index/numNodes),300+200*sin(2*3.14159*index/numNodes)");
+                @display("p=300+200*cos(2*3.14159*index/6),300+200*sin(2*3.14159*index/6)");
             gates:
-                in[numNodes-1];
-                out[numNodes-1];
+                in[sizeof(parent.node)-1];
+                out[sizeof(parent.node)-1];
         }
 
     connections:
         // Complete graph - every node connected to every other node
-        for i=0..numNodes-1, for j=0..numNodes-1, if i!=j {
+        for i=0..sizeof(node)-1, for j=0..sizeof(node)-1, if i!=j {
             node[i].out[j<i ? j : j-1] --> node[j].in[i<j ? i : i-1];
         }
 }
@@ -87,7 +101,63 @@ network FastMISGridNetwork
         node[rows*cols]: FastMISNode {
             parameters:
                 nodeId = index;
-                @display("p=100+150*(index%cols),100+150*(index/cols)");
+                @display("p=100+150*(index%3),100+150*(index/3)");
+            gates:
+                in[4];  // up, down, left, right
+                out[4]; // up, down, left, right
+        }
+
+    connections allowunconnected:
+        // Grid connections
+        for i=0..rows-1, for j=0..cols-1 {
+            // Right connection
+            node[i*cols+j].out[0] --> node[i*cols+((j+1)%cols)].in[2] if j < cols-1;
+            // Down connection  
+            node[i*cols+j].out[1] --> node[((i+1)%rows)*cols+j].in[3] if i < rows-1;
+            // Left connection
+            node[i*cols+j].out[2] --> node[i*cols+((j-1+cols)%cols)].in[0] if j > 0;
+            // Up connection
+            node[i*cols+j].out[3] --> node[((i-1+rows)%rows)*cols+j].in[1] if i > 0;
+        }
+}
+
+// Slow MIS network - complete graph
+network SlowMISNetwork
+{
+    parameters:
+        int numNodes = default(6);
+        @display("bgb=600,600");
+
+    submodules:
+        node[numNodes]: SlowMISNode {
+            parameters:
+                nodeId = index;
+                @display("p=300+200*cos(2*3.14159*index/6),300+200*sin(2*3.14159*index/6)");
+            gates:
+                in[sizeof(parent.node)-1];
+                out[sizeof(parent.node)-1];
+        }
+
+    connections:
+        // Complete graph - every node connected to every other node
+        for i=0..sizeof(node)-1, for j=0..sizeof(node)-1, if i!=j {
+            node[i].out[j<i ? j : j-1] --> node[j].in[i<j ? i : i-1];
+        }
+}
+
+// Slow MIS network - grid topology
+network SlowMISGridNetwork
+{
+    parameters:
+        int rows = default(3);
+        int cols = default(3);
+        @display("bgb=600,600");
+
+    submodules:
+        node[rows*cols]: SlowMISNode {
+            parameters:
+                nodeId = index;
+                @display("p=100+150*(index%3),100+150*(index/3)");
             gates:
                 in[4];  // up, down, left, right
                 out[4]; // up, down, left, right

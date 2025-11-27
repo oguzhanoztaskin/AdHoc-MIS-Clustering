@@ -25,3 +25,8 @@ message MISTerminateNotification {
     int senderId;
     int phase;
 }
+
+// Message type for Slow MIS neighbor discovery
+message MISNeighborAnnouncement {
+    int senderId;
+}

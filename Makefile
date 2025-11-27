@@ -31,7 +31,7 @@ PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/FastMISNode.o $O/RingNode.o $O/message_m.o
+OBJS = $O/FastMISNode.o $O/RingNode.o $O/SlowMISNode.o $O/message_m.o
 
 # Message files
 MSGFILES = \
