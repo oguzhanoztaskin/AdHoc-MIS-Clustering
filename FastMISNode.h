@@ -15,7 +15,6 @@ private:
     bool inMIS;
     bool terminated;
     double myRandomValue;
-    double finalRandomValue;  // Store the random value from the deciding phase
     
     // Tracking neighbors and their random values
     std::set<int> activeNeighbors;
@@ -24,16 +23,9 @@ private:
     
     // Self-scheduling messages
     cMessage *phaseStartMsg;
-    cMessage *randomValueTimeoutMsg;
-    cMessage *decisionTimeoutMsg;
     
     // Timing parameters
     double phaseInterval;
-    double randomValueTimeout;
-    double decisionTimeout;
-    
-    // Statistics
-    int totalPhases;
     
 protected:
     virtual void initialize() override;
@@ -43,8 +35,8 @@ protected:
 private:
     void startNewPhase();
     void sendRandomValue();
-    void makeDecision();
-    void joinMIS();
+    void tryMakeDecision();
+    void JoinMIS();
     void terminate();
     void processRandomValue(MISRandomValue *msg);
     void processJoinNotification(MISJoinNotification *msg);

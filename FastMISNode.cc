@@ -9,13 +9,9 @@ void FastMISNode::initialize() {
     inMIS = false;
     terminated = false;
     myRandomValue = 0.0;
-    finalRandomValue = 0.0;
-    totalPhases = 0;
     
     // Initialize timing parameters
     phaseInterval = par("phaseInterval").doubleValue();
-    randomValueTimeout = par("randomValueTimeout").doubleValue();
-    decisionTimeout = par("decisionTimeout").doubleValue();
     
     // Initialize neighbor set based on connected gates
     for (int i = 0; i < gateSize("out"); i++) {
@@ -30,8 +26,6 @@ void FastMISNode::initialize() {
     
     // Initialize self-messages
     phaseStartMsg = new cMessage("phaseStart");
-    randomValueTimeoutMsg = new cMessage("randomValueTimeout");
-    decisionTimeoutMsg = new cMessage("decisionTimeout");
     
     // Set default visual appearance for active nodes
     getDisplayString().setTagArg("i", 0, "device/laptop");
@@ -53,13 +47,6 @@ void FastMISNode::handleMessage(cMessage *msg) {
     // Process self messages
     if (msg == phaseStartMsg) {
         startNewPhase();
-    } else if (msg == randomValueTimeoutMsg) {
-        makeDecision();
-    } else if (msg == decisionTimeoutMsg) {
-        // Start next phase if not terminated
-        if (!terminated) {
-            scheduleAt(simTime() + phaseInterval, phaseStartMsg);
-        }
     } else {
         // Process messages from others
         // We need to delete these at the end
@@ -71,24 +58,22 @@ void FastMISNode::handleMessage(cMessage *msg) {
             processTerminateNotification(termMsg);
         } else {
             // Unknown message, ignore
+            EV_WARN << "Unknown message has been received!" << endl;
         }
         delete msg;
     }
 }
 
 void FastMISNode::startNewPhase() {
-    if (terminated) return;
-    
-    totalPhases++;
     currentPhase++;
     resetPhaseData();
     
     EV << "Node " << nodeId << " starting phase " << currentPhase << endl;
     
     sendRandomValue();
-    
-    // Schedule timeout for decision making
-    scheduleAt(simTime() + randomValueTimeout, randomValueTimeoutMsg);
+
+    // Schedule timeout for next phase
+    scheduleAt(simTime() + phaseInterval, phaseStartMsg);
 }
 
 void FastMISNode::sendRandomValue() {
@@ -106,24 +91,20 @@ void FastMISNode::sendRandomValue() {
     broadcastToNeighbors(msg);
 }
 
-void FastMISNode::makeDecision() {
-    if (terminated) return;
-    
-    // Store the random value from this deciding phase
-    finalRandomValue = myRandomValue;
-    
-    EV << "Node " << nodeId << " making decision in phase " << currentPhase << endl;
-    EV << "My random value: " << myRandomValue << ", received " << neighborRandomValues.size() 
+void FastMISNode::tryMakeDecision() {
+    EV << "Node " << nodeId << " making decision in phase " << currentPhase << endl
+       << "My random value: " << myRandomValue << ", received " << neighborRandomValues.size() 
        << " neighbor values" << endl;
     
     if (shouldJoinMIS()) {
-        joinMIS();
-    } else {
-        // Schedule next phase
-        scheduleAt(simTime() + decisionTimeout, decisionTimeoutMsg);
+        JoinMIS();
     }
 }
 
+/**
+ * Checks if our random value is smallest among all that is received and that
+ * if we received a message from every active neighbor.
+ */
 bool FastMISNode::shouldJoinMIS() {
     // Check if my random value is smaller than all neighbors' values
     for (const auto& pair : neighborRandomValues) {
@@ -142,10 +123,13 @@ bool FastMISNode::shouldJoinMIS() {
         }
     }
     
-    return !activeNeighbors.empty(); // Only join if we have neighbors
+    // No neighbor who has not sent its random value
+    // No neighbor with greater random value
+    // Then we should join MIS
+    return true;
 }
 
-void FastMISNode::joinMIS() {
+void FastMISNode::JoinMIS() {
     inMIS = true;
     
     // Change visual appearance to indicate MIS membership
@@ -163,13 +147,10 @@ void FastMISNode::joinMIS() {
     broadcastToNeighbors(msg);
     
     // Terminate after joining MIS
-    scheduleAt(simTime() + 0.1, decisionTimeoutMsg);
     terminate();
 }
 
 void FastMISNode::terminate() {
-    if (terminated) return;
-    
     terminated = true;
     
     // Change visual appearance for terminated nodes
@@ -191,12 +172,10 @@ void FastMISNode::terminate() {
     
     // Cancel all pending messages
     if (phaseStartMsg->isScheduled()) cancelEvent(phaseStartMsg);
-    if (randomValueTimeoutMsg->isScheduled()) cancelEvent(randomValueTimeoutMsg);
-    if (decisionTimeoutMsg->isScheduled()) cancelEvent(decisionTimeoutMsg);
 }
 
 void FastMISNode::processRandomValue(MISRandomValue *msg) {
-    if (terminated || msg->getPhase() != currentPhase) return;
+    if (msg->getPhase() != currentPhase) return;
     
     int senderId = msg->getSenderId();
     double value = msg->getRandomValue();
@@ -208,10 +187,12 @@ void FastMISNode::processRandomValue(MISRandomValue *msg) {
         EV << "Node " << nodeId << " received random value " << value 
            << " from neighbor " << senderId << endl;
     }
+
+    tryMakeDecision();
 }
 
 void FastMISNode::processJoinNotification(MISJoinNotification *msg) {
-    if (terminated || msg->getPhase() != currentPhase) return;
+    if (msg->getPhase() != currentPhase) return;
     
     int senderId = msg->getSenderId();
     
@@ -227,8 +208,6 @@ void FastMISNode::processJoinNotification(MISJoinNotification *msg) {
 }
 
 void FastMISNode::processTerminateNotification(MISTerminateNotification *msg) {
-    if (terminated) return;
-    
     int senderId = msg->getSenderId();
     
     // Remove terminated neighbor from active set
@@ -237,18 +216,9 @@ void FastMISNode::processTerminateNotification(MISTerminateNotification *msg) {
     
     EV << "Node " << nodeId << " notified that neighbor " << senderId 
        << " terminated. Active neighbors: " << activeNeighbors.size() << endl;
-    
-    // TODO: Do not MIS neighbors terminate too? Would not termination message and MIS join message collide?
-    // If no active neighbors left, might need to join MIS
-    if (activeNeighbors.empty() && !inMIS && !terminated) {
-        EV << "Node " << nodeId << " has no active neighbors left - joining MIS" << endl;
-        inMIS = true;
-        // Change visual appearance for isolated nodes joining MIS
-        getDisplayString().setTagArg("i", 0, "device/server");
-        getDisplayString().setTagArg("i", 1, "green");
-        getDisplayString().setTagArg("i", 2, "50");
-        terminate();
-    }
+
+    // Active neighbors is updated, try joining again
+    tryMakeDecision();
 }
 
 void FastMISNode::broadcastToNeighbors(cMessage *msg) {
@@ -262,26 +232,23 @@ void FastMISNode::broadcastToNeighbors(cMessage *msg) {
 
 void FastMISNode::resetPhaseData() {
     neighborRandomValues.clear();
-    neighborsInMIS.clear();
     myRandomValue = 0.0;
 }
 
 void FastMISNode::finish() {
     cancelAndDelete(phaseStartMsg);
-    cancelAndDelete(randomValueTimeoutMsg);
-    cancelAndDelete(decisionTimeoutMsg);
     
     // Print to both EV and cout to ensure visibility
-    std::string msg = "Node " + std::to_string(nodeId) + " finished after " + 
-                      std::to_string(totalPhases) + " phases. " +
+    std::string msg = "Node " + std::to_string(nodeId) + " finished at " + 
+                      std::to_string(currentPhase) + " phase. " +
                       (inMIS ? "IN MIS" : "NOT in MIS") + 
-                      " (final random value: " + std::to_string(finalRandomValue) + ")";
+                      " (final random value: " + std::to_string(myRandomValue) + ")";
     
     EV << msg << endl;
     std::cout << "INFO: " << msg << std::endl;
     
     // Record statistics
-    recordScalar("phases", totalPhases);
+    recordScalar("phase", currentPhase);
     recordScalar("inMIS", inMIS ? 1 : 0);
-    recordScalar("finalRandomValue", finalRandomValue);
+    recordScalar("myRandomValue", myRandomValue);
 }

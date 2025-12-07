@@ -20,8 +20,6 @@ simple FastMISNode
     parameters:
         int nodeId = default(index);
         double phaseInterval = default(2.0);        // Time between phases
-        double randomValueTimeout = default(0.5);   // Time to wait for neighbor random values
-        double decisionTimeout = default(0.5);      // Time to wait before next phase
         @class(FastMISNode);
         @display("i=device/server;is=s");
     gates:
