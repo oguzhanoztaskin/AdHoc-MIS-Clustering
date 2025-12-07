@@ -175,3 +175,57 @@ network SlowMISGridNetwork
             node[i*cols+j].out[3] --> node[((i-1+rows)%rows)*cols+j].in[1] if i > 0;
         }
 }
+
+// Fast MIS network - random graph (Erdős-Rényi)
+network FastMISRandomNetwork
+{
+    parameters:
+        int numNodes = default(10);
+        double edgeProbability = default(0.3); // Probability that any two nodes are connected
+        @display("bgb=800,800");
+
+    submodules:
+        node[numNodes]: FastMISNode {
+            parameters:
+                nodeId = index;
+                @display("p=400+300*cos(2*3.14159*index/numNodes),400+300*sin(2*3.14159*index/numNodes)");
+            gates:
+                in[sizeof(parent.node)-1];
+                out[sizeof(parent.node)-1];
+        }
+
+    connections allowunconnected:
+        // Random graph - each pair of nodes connected with probability edgeProbability
+        // Both directions created together to ensure undirected graph
+        for i=0..sizeof(node)-1, for j=i+1..sizeof(node)-1, if uniform(0,1) < edgeProbability {
+            node[i].out[j-1] --> node[j].in[i];
+            node[j].out[i] --> node[i].in[j-1];
+        }
+}
+
+// Slow MIS network - random graph (Erdős-Rényi)
+network SlowMISRandomNetwork
+{
+    parameters:
+        int numNodes = default(10);
+        double edgeProbability = default(0.3); // Probability that any two nodes are connected
+        @display("bgb=800,800");
+
+    submodules:
+        node[numNodes]: SlowMISNode {
+            parameters:
+                nodeId = index;
+                @display("p=400+300*cos(2*3.14159*index/numNodes),400+300*sin(2*3.14159*index/numNodes)");
+            gates:
+                in[sizeof(parent.node)-1];
+                out[sizeof(parent.node)-1];
+        }
+
+    connections allowunconnected:
+        // Random graph - each pair of nodes connected with probability edgeProbability
+        // Both directions created together to ensure undirected graph
+        for i=0..sizeof(node)-1, for j=i+1..sizeof(node)-1, if uniform(0,1) < edgeProbability {
+            node[i].out[j-1] --> node[j].in[i];
+            node[j].out[i] --> node[i].in[j-1];
+        }
+}

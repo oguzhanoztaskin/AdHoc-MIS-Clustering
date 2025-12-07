@@ -50,6 +50,11 @@ void FastMISNode::handleMessage(cMessage *msg) {
     // Process self messages
     if (msg == phaseStartMsg) {
         startNewPhase();
+        if (activeNeighbors.size() == 0) {
+            // Isolated node, no messages will be received.
+            // Try making a decision here.
+            tryMakeDecision();
+        }
     } else if (msg == sendRandomValueMsg) {
         sendRandomValue();
     } else {
