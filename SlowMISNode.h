@@ -10,34 +10,37 @@ using namespace omnetpp;
 
 class SlowMISNode : public cSimpleModule
 {
+public:
+    enum Decision {
+        JOIN_MIS,
+        TERMINATE,
+        NO_DECISION
+    };
 private:
     int nodeId;
     bool inMIS;
     bool terminated;
     bool neighborDiscoveryComplete;
     
-    // Neighbors and their status
-    std::set<int> allNeighbors;
-    std::set<int> higherIdNeighbors;
-    std::map<int, bool> neighborDecisions; // true = joined MIS, false = decided not to join
-    
     // Timing parameters
-    double checkInterval;
-    double discoveryTimeout;
+    double initialStartDelay;
     
-    // Self-messages
-    cMessage *checkDecisionMsg;
-    cMessage *neighborDiscoveryMsg;
-    cMessage *discoveryTimeoutMsg;
+    // Self messages
+    cMessage *startAlgorithmMsg;
+    
+    // Neighbors and their status
+    std::set<int> neighbors;
+    std::map<int, bool> neighborDecisions; // true = joined MIS, false = decided not to join
     
     // Methods
     void startNeighborDiscovery();
     void finishNeighborDiscovery();
-    void checkAndMakeDecision();
-    bool canJoinMIS();
+    void tryMakeDecision();
+    Decision makeDecision();
     void joinMIS();
     void terminate();
     void broadcastToNeighbors(cMessage *msg);
+    void broadcastToLowerNeighbors(cMessage *msg);
     void processNeighborAnnouncement(cMessage *msg);
     void processJoinNotification(MISJoinNotification *msg);
     void processTerminateNotification(MISTerminateNotification *msg);

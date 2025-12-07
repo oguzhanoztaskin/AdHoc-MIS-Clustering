@@ -34,8 +34,7 @@ simple SlowMISNode
 {
     parameters:
         int nodeId = default(index);
-        double checkInterval = default(1.0);        // Time between decision checks
-        double discoveryTimeout = default(0.5);     // Time for neighbor discovery phase
+        double initialStartDelay = default(0.1);    // Max delay for initial algorithm start
         @class(SlowMISNode);
         @display("i=device/laptop;is=s");
     gates:
