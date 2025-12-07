@@ -12,6 +12,8 @@ void FastMISNode::initialize() {
     
     // Initialize timing parameters
     phaseInterval = par("phaseInterval").doubleValue();
+    initialStartDelay = par("initialStartDelay").doubleValue();
+    randomValueSendDelay = par("randomValueSendDelay").doubleValue();
     
     // Initialize neighbor set based on connected gates
     for (int i = 0; i < gateSize("out"); i++) {
@@ -26,20 +28,21 @@ void FastMISNode::initialize() {
     
     // Initialize self-messages
     phaseStartMsg = new cMessage("phaseStart");
+    sendRandomValueMsg = new cMessage("sendRandomValue");
     
     // Set default visual appearance for active nodes
     getDisplayString().setTagArg("i", 0, "device/laptop");
     getDisplayString().setTagArg("i", 1, "blue");
     getDisplayString().setTagArg("i", 2, "35");
     
-    // Start the algorithm
-    scheduleAt(simTime() + uniform(0, 1), phaseStartMsg);
+    // Start the algorithm with uniform delay
+    scheduleAt(simTime() + uniform(0, initialStartDelay), phaseStartMsg);
     
     EV << "FastMISNode " << nodeId << " initialized with " << activeNeighbors.size() << " neighbors" << endl;
 }
 
 void FastMISNode::handleMessage(cMessage *msg) {
-    if (terminated) {
+    if (terminated && !msg->isSelfMessage()) {
         delete msg;
         return;
     }
@@ -47,6 +50,8 @@ void FastMISNode::handleMessage(cMessage *msg) {
     // Process self messages
     if (msg == phaseStartMsg) {
         startNewPhase();
+    } else if (msg == sendRandomValueMsg) {
+        sendRandomValue();
     } else {
         // Process messages from others
         // We need to delete these at the end
@@ -65,12 +70,15 @@ void FastMISNode::handleMessage(cMessage *msg) {
 }
 
 void FastMISNode::startNewPhase() {
+    logPhaseEnd();
+    
     currentPhase++;
     resetPhaseData();
     
     EV << "Node " << nodeId << " starting phase " << currentPhase << endl;
     
-    sendRandomValue();
+    // Schedule sending random value after configured delay
+    scheduleAt(simTime() + randomValueSendDelay, sendRandomValueMsg);
 
     // Schedule timeout for next phase
     scheduleAt(simTime() + phaseInterval, phaseStartMsg);
@@ -175,7 +183,13 @@ void FastMISNode::terminate() {
 }
 
 void FastMISNode::processRandomValue(MISRandomValue *msg) {
-    if (msg->getPhase() != currentPhase) return;
+    if (msg->getPhase() != currentPhase) {
+        EV_WARN << "Node " << nodeId << " received random value " << msg->getRandomValue() 
+           << " from neighbor " << msg->getSenderId()
+           << " but our phase: " << currentPhase
+           << " their phase: " << msg->getPhase() << endl;
+        return;
+    }
     
     int senderId = msg->getSenderId();
     double value = msg->getRandomValue();
@@ -192,14 +206,20 @@ void FastMISNode::processRandomValue(MISRandomValue *msg) {
 }
 
 void FastMISNode::processJoinNotification(MISJoinNotification *msg) {
-    if (msg->getPhase() != currentPhase) return;
+    if (msg->getPhase() != currentPhase) {
+        EV_WARN << "Node " << nodeId << " received join notification value from neighbor "
+           << msg->getSenderId()
+           << " but our phase: " << currentPhase
+           << " their phase: " << msg->getPhase() << endl;
+        return;
+    }
     
     int senderId = msg->getSenderId();
     
     if (activeNeighbors.find(senderId) != activeNeighbors.end()) {
         neighborsInMIS.insert(senderId);
         
-        EV << "Node " << nodeId << " notified that neighbor " << senderId 
+        EV << "Node " << nodeId << " is notified that neighbor " << senderId 
            << " joined MIS" << endl;
         
         // Terminate because a neighbor joined MIS
@@ -214,7 +234,7 @@ void FastMISNode::processTerminateNotification(MISTerminateNotification *msg) {
     activeNeighbors.erase(senderId);
     neighborRandomValues.erase(senderId);
     
-    EV << "Node " << nodeId << " notified that neighbor " << senderId 
+    EV << "Node " << nodeId << " is notified that neighbor " << senderId 
        << " terminated. Active neighbors: " << activeNeighbors.size() << endl;
 
     // Active neighbors is updated, try joining again
@@ -235,8 +255,36 @@ void FastMISNode::resetPhaseData() {
     myRandomValue = 0.0;
 }
 
+void FastMISNode::logPhaseEnd() {
+    // Collect all random values (own + neighbors) and sort them
+    std::vector<std::pair<double, int>> allValues;
+    allValues.push_back({myRandomValue, nodeId}); // Add own value
+    for (const auto& pair : neighborRandomValues) {
+        allValues.push_back({pair.second, pair.first});
+    }
+    std::sort(allValues.begin(), allValues.end());
+    
+    // Build string representation with own value highlighted
+    std::ostringstream oss;
+    oss << "[";
+    for (size_t i = 0; i < allValues.size(); ++i) {
+        if (i > 0) oss << ", ";
+        if (allValues[i].second == nodeId) {
+            oss << ">>>" << std::fixed << allValues[i].first << " (SELF)<<<";
+        } else {
+            oss << std::fixed << allValues[i].first << " (" << allValues[i].second << ")";
+        }
+    }
+    oss << "]";
+    
+    EV << "Node " << nodeId << " is ending phase " << currentPhase << endl
+       << " with its random value " << std::fixed << myRandomValue << endl
+       << " with all random values (sorted) " << oss.str() << endl;
+}
+
 void FastMISNode::finish() {
     cancelAndDelete(phaseStartMsg);
+    cancelAndDelete(sendRandomValueMsg);
     
     // Print to both EV and cout to ensure visibility
     std::string msg = "Node " + std::to_string(nodeId) + " finished at " + 

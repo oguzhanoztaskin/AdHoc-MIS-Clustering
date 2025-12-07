@@ -20,6 +20,8 @@ simple FastMISNode
     parameters:
         int nodeId = default(index);
         double phaseInterval = default(2.0);        // Time between phases
+        double initialStartDelay = default(0.1);    // Max delay for initial algorithm start
+        double randomValueSendDelay = default(0.1); // Delay before sending random value
         @class(FastMISNode);
         @display("i=device/server;is=s");
     gates:

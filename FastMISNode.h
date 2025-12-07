@@ -23,9 +23,12 @@ private:
     
     // Self-scheduling messages
     cMessage *phaseStartMsg;
+    cMessage *sendRandomValueMsg;
     
     // Timing parameters
     double phaseInterval;
+    double initialStartDelay;
+    double randomValueSendDelay;
     
 protected:
     virtual void initialize() override;
@@ -44,6 +47,7 @@ private:
     bool shouldJoinMIS();
     void broadcastToNeighbors(cMessage *msg);
     void resetPhaseData();
+    void logPhaseEnd();
 };
 
 #endif
