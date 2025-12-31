@@ -20,11 +20,6 @@ echo "----------------------------------------"
 ./demo -u Cmdenv -c FastMIS-Grid-Small -r 0 2>&1 | grep "INFO:" | head -10
 echo ""
 
-echo "3. DesireLevelMIS (Optimal local algorithm)"
-echo "----------------------------------------"
-./demo -u Cmdenv -c DesireLevelMIS-Grid-Small -r 0 2>&1 | grep "INFO:" | head -10
-echo ""
-
 echo "================================================"
 echo "Comparison complete!"
 echo "================================================"
@@ -32,4 +27,3 @@ echo ""
 echo "Key observations:"
 echo "- SlowMIS: Deterministic, depends on node IDs"
 echo "- FastMIS: Randomized phases, O(log Δ · log log Δ)"
-echo "- DesireLevelMIS: Dynamic desire levels, O(log Δ + log 1/ε)"

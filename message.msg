@@ -31,13 +31,6 @@ message MISNeighborAnnouncement {
     int senderId;
 }
 
-// Message types for Desire-Level MIS algorithm
-message MISDesireLevelMessage {
-    int senderId;
-    double desireLevel;
-    int round;
-}
-
 message MISMarkMessage {
     int senderId;
     bool isMarked;
